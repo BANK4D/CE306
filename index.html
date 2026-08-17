@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>แปลงสกุลเงิน</title>
+<style>
+body{font-family:Arial;margin:20px}
+.box{max-width:380px;margin:auto;border:1px solid #ccc;padding:10px;margin-bottom:10px}
+input,select{width:100%;padding:5px;margin:5px 0}
+table{width:100%;border-collapse:collapse}
+td{border:1px solid #ccc;padding:4px;font-size:13px}
+</style>
+</head>
+<body>
+
+<h2 style="text-align:center">โปรแกรมแปลงสกุลเงิน</h2>
+
+<div class="box">
+  <input type="number" id="a1" value="1">
+  <select id="c1"></select>
+  <button id="swap">สลับสกุลเงิน</button>
+  <input type="number" id="a2">
+  <select id="c2"></select>
+  <button id="clear">ล้างข้อมูล</button>
+  <p id="rateLine"></p>
+  <p id="timeLine" style="font-size:12px;color:#666"></p>
+</div>
+
+<div class="box">
+  <b>ประวัติ (10 รายการล่าสุด)</b>
+  <button id="clearHist">ล้างประวัติ</button>
+  <table id="histTable"><tr><td>ยังไม่มีประวัติ</td></tr></table>
+</div>
+
+<script>
+var rates={USD:1,THB:33.16,EUR:0.865,GBP:0.739,JPY:159.3,CNY:7.1,KRW:1460,SGD:1.28,AUD:1.53,NZD:1.69,CAD:1.37,CHF:0.79,HKD:7.83,INR:92.5,MYR:3.95,IDR:16900,PHP:59.5,VND:26100};
+var a1=document.getElementById("a1"), a2=document.getElementById("a2");
+var c1=document.getElementById("c1"), c2=document.getElementById("c2");
+var rateLine=document.getElementById("rateLine"), timeLine=document.getElementById("timeLine");
+var histTable=document.getElementById("histTable");
+var hist=[], last="a1";
+
+for(var k in rates){
+  c1.innerHTML+="<option value='"+k+"'"+(k=="USD"?" selected":"")+">"+k+"</option>";
+  c2.innerHTML+="<option value='"+k+"'"+(k=="THB"?" selected":"")+">"+k+"</option>";
+}
+
+function now(){ return new Date().toLocaleString("th-TH"); }
+function calc(f,t,amt){ return amt/rates[f]*rates[t]; }
+
+function convert(dir,log){
+  var f=c1.value, t=c2.value;
+  if(dir=="a1"){
+    var amt=parseFloat(a1.value)||0;
+    var res=calc(f,t,amt);
+    a2.value=amt?res.toFixed(4):"";
+    if(log) addHist(amt,f,res.toFixed(4),t);
+  } else {
+    var amt=parseFloat(a2.value)||0;
+    var res=calc(t,f,amt);
+    a1.value=amt?res.toFixed(4):"";
+    if(log) addHist(res.toFixed(4),f,amt,t);
+  }
+  rateLine.textContent="1 "+f+" = "+(rates[t]/rates[f]).toFixed(4)+" "+t;
+  timeLine.textContent="ดึงข้อมูลล่าสุดเมื่อ: "+now();
+}
+
+function addHist(fa,fc,ta,tc){
+  if(!fa||!ta) return;
+  hist.unshift(fa+" "+fc+" -> "+ta+" "+tc+"  ("+now()+")");
+  hist=hist.slice(0,10);
+  renderHist();
+}
+
+function renderHist(){
+  histTable.innerHTML = hist.length
+    ? hist.map(function(h){ return "<tr><td>"+h+"</td></tr>"; }).join("")
+    : "<tr><td>ยังไม่มีประวัติ</td></tr>";
+}
+
+a1.oninput=function(){ last="a1"; convert("a1",false); };
+a2.oninput=function(){ last="a2"; convert("a2",false); };
+a1.onblur=function(){ if(parseFloat(a1.value)>0) convert("a1",true); };
+a2.onblur=function(){ if(parseFloat(a2.value)>0) convert("a2",true); };
+c1.onchange=function(){ convert(last,true); };
+c2.onchange=function(){ convert(last,true); };
+
+document.getElementById("swap").onclick=function(){
+  var t=c1.value; c1.value=c2.value; c2.value=t;
+  convert(last,true);
+};
+
+document.getElementById("clear").onclick=function(){
+  a1.value="1"; a2.value=""; c1.value="USD"; c2.value="THB"; last="a1";
+  convert("a1",false);
+};
+
+document.getElementById("clearHist").onclick=function(){ hist=[]; renderHist(); };
+
+convert("a1",false);
+</script>
+
+</body>
+</html>
