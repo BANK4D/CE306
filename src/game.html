@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>พิมพ์ไว — เกมฝึกพิมพ์เร็วสไตล์คอมพิวเตอร์</title>
+
+<script>
+  // ตั้งค่าโหมดมืด/สว่างก่อนหน้าเพจ render เพื่อไม่ให้เกิดการกะพริบสี
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add('dark');
+  }
+</script>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          ink: {
+            50: '#F2ECE4', 100: '#E4DCCF', 200: '#CFC5D8',
+            300: '#B9AFC9', 400: '#8B8499', 600: '#4A4166',
+            700: '#3A3350', 800: '#2A2440', 900: '#1F1B2E'
+          },
+          mint:  { 400: '#8FE3B8', 500: '#6FCF97', 600: '#4FAE79' },
+          coral: { 400: '#F08279', 500: '#EB5E55', 600: '#CC463E' },
+          amber: { 400: '#F5C773', 500: '#F2B84B', 600: '#D99A2B' }
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace']
+        }
+      }
+    }
+  };
+</script>
+
+<style>
+  body {
+    background-image: radial-gradient(currentColor 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .keycap {
+    box-shadow: 0 6px 0 0 var(--keycap-shadow, rgba(31,27,46,0.15));
+  }
+  :focus-visible {
+    outline: 3px solid #6FCF97;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .flash-success { animation: pop-success 0.35s ease-out; }
+    .flash-error   { animation: shake-error 0.35s ease-out; }
+    @keyframes pop-success {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake-error {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .keycap, button, input, dialog {
+      border: 2px solid CanvasText;
+      forced-color-adjust: none;
+      background: Canvas;
+      color: CanvasText;
+    }
+    :focus-visible { outline: 3px solid Highlight; }
+  }
+</style>
+</head>
+
+<body class="min-h-screen bg-ink-50 text-ink-900 dark:bg-ink-900 dark:text-ink-50 font-display transition-colors">
+
+  <div class="max-w-xl mx-auto px-4 py-8 sm:py-12">
+
+    <header class="flex items-start justify-between gap-3 flex-wrap mb-8">
+      <div>
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">พิมพ์ไว</h1>
+        <p class="text-sm sm:text-base text-ink-400 mt-1 max-w-xs">ฝึกพิมพ์เร็วด้วยคำศัพท์คอมพิวเตอร์ ยิ่งพิมพ์แม่น ยิ่งไปได้ไกล</p>
+      </div>
+      <button id="themeBtn" type="button"
+        class="shrink-0 w-11 h-11 rounded-xl border border-ink-200 dark:border-ink-700 bg-white/60 dark:bg-ink-800 hover:bg-ink-100 dark:hover:bg-ink-700 text-xl transition-colors"
+        aria-label="สลับโหมดมืด/สว่าง">🌙</button>
+    </header>
+
+    <section class="rounded-2xl border border-ink-200 dark:border-ink-700 bg-white/60 dark:bg-ink-800 p-4 sm:p-8">
+
+      <div class="flex flex-wrap items-center justify-center gap-3 text-sm sm:text-base mb-6">
+        <span id="levelChip" class="px-3 py-1 rounded-full bg-amber-400/20 border border-amber-500 text-amber-600 dark:text-amber-400 font-semibold">Level 1</span>
+        <span id="timerChip" class="px-3 py-1 rounded-full bg-ink-100 dark:bg-ink-700 border border-ink-300 dark:border-ink-600 font-mono">⏱ 45s</span>
+        <span id="progressChip" class="px-3 py-1 rounded-full bg-mint-400/20 border border-mint-500 text-mint-600 dark:text-mint-400 font-semibold">🎯 0/6</span>
+      </div>
+
+      <div id="wordCard" class="keycap rounded-2xl bg-ink-900 dark:bg-ink-50 text-center py-8 sm:py-10 px-4 mb-6"
+           style="--keycap-shadow: rgba(0,0,0,0.25);">
+        <p id="wordDisplay" class="font-mono text-2xl sm:text-4xl tracking-wide text-ink-50 dark:text-ink-900 break-words">
+          กดเริ่มเกมเพื่อเริ่มพิมพ์
+        </p>
+      </div>
+
+      <form id="typeForm" class="flex flex-col sm:flex-row gap-3 mb-6" autocomplete="off">
+        <label for="typeInput" class="sr-only">พิมพ์คำที่เห็นด้านบนให้ตรงกัน</label>
+        <input
+          id="typeInput"
+          name="typeInput"
+          type="text"
+          disabled
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="พิมพ์คำที่เห็นด้านบนตรงนี้..."
+          class="flex-1 rounded-xl border border-ink-300 dark:border-ink-600 bg-white dark:bg-ink-900 px-4 py-3 font-mono text-lg outline-none focus:border-mint-500 disabled:opacity-50"
+        >
+        <button type="submit"
+          class="rounded-xl bg-mint-500 hover:bg-mint-600 text-ink-900 font-semibold px-5 py-3 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          ส่งคำ
+        </button>
+      </form>
+
+      <p id="statusMsg" role="status" aria-live="polite" class="text-center text-sm sm:text-base min-h-[1.5rem] mb-6 text-ink-600 dark:text-ink-300">
+        กดปุ่ม "เริ่มเกม" เพื่อเริ่มต้น
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <button id="startBtn" type="button"
+          class="rounded-xl bg-ink-900 dark:bg-ink-50 text-ink-50 dark:text-ink-900 font-semibold px-5 py-3 hover:opacity-90 transition-opacity">
+          เริ่มเกม
+        </button>
+        <button id="timeBtn" type="button"
+          class="rounded-xl border border-mint-500 text-mint-600 dark:text-mint-400 font-semibold px-5 py-3 hover:bg-mint-400/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          เพิ่มเวลา +10 วิ
+        </button>
+        <button id="levelBtn" type="button"
+          class="rounded-xl border border-amber-500 text-amber-600 dark:text-amber-400 font-semibold px-5 py-3 hover:bg-amber-400/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          เพิ่ม Level
+        </button>
+        <button id="levelDownBtn" type="button"
+          class="rounded-xl border border-ink-300 dark:border-ink-600 font-semibold px-5 py-3 hover:bg-ink-100 dark:hover:bg-ink-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          ลด Level
+        </button>
+        <button id="helpBtn" type="button"
+          class="rounded-xl border border-ink-300 dark:border-ink-600 font-semibold px-5 py-3 hover:bg-ink-100 dark:hover:bg-ink-700 transition-colors">
+          วิธีเล่น
+        </button>
+      </div>
+
+    </section>
+
+    <p class="text-center text-xs text-ink-400 mt-6">เล่นได้ด้วยแป้นพิมพ์ล้วน ๆ — พิมพ์คำแล้วกด Enter</p>
+  </div>
+
+  <dialog id="helpDialog" class="rounded-2xl border border-ink-200 dark:border-ink-700 bg-ink-50 dark:bg-ink-800 text-ink-900 dark:text-ink-50 max-w-md w-[90%] p-6 backdrop:bg-ink-900/50">
+    <h2 class="text-xl font-bold mb-4">วิธีเล่น</h2>
+    <ol class="list-decimal list-inside space-y-2 text-sm sm:text-base text-ink-600 dark:text-ink-300 mb-6">
+      <li>กด "เริ่มเกม" แล้วคำศัพท์คอมพิวเตอร์จะปรากฏในกล่องสีเข้ม</li>
+      <li>พิมพ์คำนั้นให้ตรงเป๊ะในช่องกรอก แล้วกด Enter หรือปุ่ม "ส่งคำ"</li>
+      <li>พิมพ์ถูกครบตามเป้าหมาย 🎯 ก่อนเวลาหมด ⏱ เพื่อชนะ</li>
+      <li>กด "เพิ่มเวลา" หรือ "ลด Level" ก่อนเริ่มเกม เพื่อช่วยให้เล่นง่ายขึ้น</li>
+      <li>เมื่อจบเกมจะเห็นความเร็วโดยประมาณเป็นคำต่อนาที (WPM)</li>
+    </ol>
+    <button id="closeHelp" type="button" class="w-full rounded-xl bg-mint-500 hover:bg-mint-600 text-ink-900 font-semibold px-5 py-3 transition-colors">
+      เข้าใจแล้ว
+    </button>
+  </dialog>
+
+<script>
+(function () {
+  const wordBanks = {
+    easy:   ['เมาส์', 'แป้นพิมพ์', 'ไฟล์', 'โฟลเดอร์', 'อีเมล', 'รหัสผ่าน', 'จอภาพ', 'คีย์บอร์ด'],
+    medium: ['ฐานข้อมูล', 'อัลกอริทึม', 'เครือข่าย', 'เบราว์เซอร์', 'ซอฟต์แวร์', 'ฮาร์ดแวร์', 'โปรแกรมเมอร์', 'ระบบปฏิบัติการ'],
+    hard:   ['การเข้ารหัสข้อมูล', 'ปัญญาประดิษฐ์', 'โครงสร้างข้อมูล', 'ระบบจัดการฐานข้อมูล', 'การประมวลผลแบบขนาน', 'ความปลอดภัยไซเบอร์']
+  };
+
+  const el = {
+    themeBtn: document.getElementById('themeBtn'),
+    levelChip: document.getElementById('levelChip'),
+    timerChip: document.getElementById('timerChip'),
+    progressChip: document.getElementById('progressChip'),
+    wordCard: document.getElementById('wordCard'),
+    wordDisplay: document.getElementById('wordDisplay'),
+    form: document.getElementById('typeForm'),
+    input: document.getElementById('typeInput'),
+    statusMsg: document.getElementById('statusMsg'),
+    startBtn: document.getElementById('startBtn'),
+    levelBtn: document.getElementById('levelBtn'),
+    timeBtn: document.getElementById('timeBtn'),
+    levelDownBtn: document.getElementById('levelDownBtn'),
+    helpBtn: document.getElementById('helpBtn'),
+    helpDialog: document.getElementById('helpDialog'),
+    closeHelp: document.getElementById('closeHelp')
+  };
+
+  const MAX_LEVEL = 10;
+  const TIME_INCREMENT = 10;
+  const MAX_TIME_BONUS = 60;
+  let level = 1;
+  let timeBonus = 0;
+  let isPlaying = false;
+  let timeLeft = 0;
+  let target = 0;
+  let score = 0;
+  let mistakes = 0;
+  let currentWord = '';
+  let timerId = null;
+
+  function settingsForLevel(lv) {
+    return {
+      time: Math.max(15, 45 - (lv - 1) * 4) + timeBonus,
+      target: 5 + lv
+    };
+  }
+
+  function poolForLevel(lv) {
+    if (lv <= 1) return wordBanks.easy;
+    if (lv <= 3) return wordBanks.easy.concat(wordBanks.medium);
+    return wordBanks.medium.concat(wordBanks.hard);
+  }
+
+  function pickWord() {
+    const pool = poolForLevel(level);
+    let next = currentWord;
+    while (next === currentWord && pool.length > 1) {
+      next = pool[Math.floor(Math.random() * pool.length)];
+    }
+    currentWord = next;
+    el.wordDisplay.textContent = currentWord;
+  }
+
+  function updateChips() {
+    const s = settingsForLevel(level);
+    el.levelChip.textContent = `Level ${level}`;
+    el.timerChip.textContent = `⏱ ${isPlaying || timeLeft ? timeLeft : s.time}s`;
+    el.progressChip.textContent = `🎯 ${score}/${target || s.target}`;
+    el.timeBtn.disabled = isPlaying || timeBonus >= MAX_TIME_BONUS;
+    el.levelBtn.disabled = isPlaying || level >= MAX_LEVEL;
+    el.levelDownBtn.disabled = isPlaying || level <= 1;
+  }
+
+  function flash(kind) {
+    el.wordCard.classList.remove('flash-success', 'flash-error');
+    void el.wordCard.offsetWidth; // reset animation
+    el.wordCard.classList.add(kind === 'success' ? 'flash-success' : 'flash-error');
+  }
+
+  function startGame() {
+    const s = settingsForLevel(level);
+    isPlaying = true;
+    score = 0;
+    mistakes = 0;
+    timeLeft = s.time;
+    target = s.target;
+
+    el.input.disabled = false;
+    el.input.value = '';
+    el.startBtn.textContent = 'เริ่มใหม่';
+    el.statusMsg.textContent = 'เริ่ม! พิมพ์คำที่เห็นแล้วกด Enter';
+
+    pickWord();
+    updateChips();
+    el.input.focus();
+
+    clearInterval(timerId);
+    timerId = setInterval(tick, 1000);
+  }
+
+  function tick() {
+    timeLeft -= 1;
+    updateChips();
+    if (timeLeft <= 0) endGame(false);
+  }
+
+  function endGame(won) {
+    isPlaying = false;
+    clearInterval(timerId);
+    el.input.disabled = true;
+
+    const s = settingsForLevel(level);
+    const elapsedSeconds = Math.max(1, s.time - Math.max(timeLeft, 0));
+    const wpm = Math.round((score / elapsedSeconds) * 60);
+
+    if (won) {
+      el.wordDisplay.textContent = '🎉 เก่งมาก!';
+      el.statusMsg.textContent = `ชนะ! พิมพ์ถูก ${score} คำ ความเร็วประมาณ ${wpm} คำ/นาที (พิมพ์ผิด ${mistakes} ครั้ง)`;
+    } else {
+      el.wordDisplay.textContent = '⏰ หมดเวลา';
+      el.statusMsg.textContent = `หมดเวลา! พิมพ์ได้ ${score}/${target} คำ ลองใหม่อีกครั้งนะ`;
+    }
+    timeLeft = 0;
+    updateChips();
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!isPlaying) return;
+
+    const value = el.input.value.trim();
+    if (value.length === 0) return;
+
+    if (value === currentWord) {
+      score += 1;
+      flash('success');
+      el.input.value = '';
+      if (score >= target) {
+        endGame(true);
+      } else {
+        pickWord();
+        updateChips();
+        el.statusMsg.textContent = 'ถูกต้อง! ไปคำต่อไป';
+      }
+    } else {
+      mistakes += 1;
+      flash('error');
+      el.input.value = '';
+      el.statusMsg.textContent = 'พิมพ์ไม่ตรง ลองอีกครั้ง';
+    }
+  }
+
+  function levelUp() {
+    if (isPlaying) return;
+    level = Math.min(level + 1, MAX_LEVEL);
+    const s = settingsForLevel(level);
+    timeLeft = s.time;
+    target = 0;
+    score = 0;
+    updateChips();
+    el.statusMsg.textContent = `เพิ่มระดับเป็น Level ${level} แล้ว กด "เริ่มเกม" เพื่อเล่นต่อ`;
+  }
+
+  function levelDown() {
+    if (isPlaying) return;
+    level = Math.max(level - 1, 1);
+    const s = settingsForLevel(level);
+    timeLeft = s.time;
+    target = 0;
+    score = 0;
+    updateChips();
+    el.statusMsg.textContent = `ลดระดับเป็น Level ${level} แล้ว กด "เริ่มเกม" เพื่อเล่นต่อ`;
+  }
+
+  function increaseTime() {
+    if (isPlaying) return;
+    timeBonus = Math.min(timeBonus + TIME_INCREMENT, MAX_TIME_BONUS);
+    const s = settingsForLevel(level);
+    timeLeft = s.time;
+    updateChips();
+    el.statusMsg.textContent = `เพิ่มเวลาอีก ${TIME_INCREMENT} วินาทีแล้ว กด "เริ่มเกม" เพื่อเล่นต่อ`;
+  }
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    el.themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+  }
+
+  el.themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+
+  el.form.addEventListener('submit', handleSubmit);
+  el.startBtn.addEventListener('click', startGame);
+  el.levelBtn.addEventListener('click', levelUp);
+  el.levelDownBtn.addEventListener('click', levelDown);
+  el.timeBtn.addEventListener('click', increaseTime);
+  el.themeBtn.addEventListener('click', toggleTheme);
+  el.helpBtn.addEventListener('click', () => el.helpDialog.showModal());
+  el.closeHelp.addEventListener('click', () => el.helpDialog.close());
+
+  updateChips();
+})();
+</script>
+</body>
+</html>
