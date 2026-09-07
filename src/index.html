@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="th" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio ตัวอย่างสําหรับ CE สร้างด้วย Tailwind CSS play CDI">
+  <title>Portfolio | Thanabade Muenkraithong </title>
+
+  <!-- 1)PLAY CDN:เหมาะกับการเรียนเเละ prototype ไม่เหมาะสำหรับ production -->
+   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 2) DESIGN TOKENS -->
+  <style>
+    :root {
+      --color-brand-50: #e9f5ff;
+      --color-brand-100: #d1e9ff;
+      --color-brand-200: #a3d3ff;
+      --color-brand-300: #75bdff;
+      --color-brand-400: #47a7ff;
+      --font-display: 'Poppins', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <main class="min-h-screen bg-slate-950 text-slate-100">
+    <nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+      <a href="#top" class="text-lg font-bold tracking-wide text-sky-300">TM.</a>
+      <div class="flex gap-6 text-sm text-slate-300">
+        <a href="#about" class="transition hover:text-sky-300">เกี่ยวกับฉัน</a>
+        <a href="#skills" class="transition hover:text-sky-300">ทักษะ</a>
+        <a href="#contact" class="transition hover:text-sky-300">ติดต่อ</a>
+      </div>
+    </nav>
+
+    <section id="top" class="mx-auto grid max-w-6xl gap-10 px-6 pb-24 pt-20 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+      <div>
+        <p class="mb-5 text-sm font-semibold uppercase tracking-[0.3em] text-sky-300">Computer Engineering Student</p>
+        <h1 class="max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">Thanabade<br><span class="text-sky-300">Muenkraithong</span></h1>
+        <p class="mt-6 max-w-xl text-lg leading-8 text-slate-300">นักศึกษาวิศวกรรมคอมพิวเตอร์ที่สนใจการพัฒนาเว็บไซต์ การออกแบบประสบการณ์ผู้ใช้ และการสร้างโปรเจกต์ที่ใช้งานได้จริง</p>
+        <div class="mt-8 flex flex-wrap gap-4">
+          <a href="#contact" class="rounded-lg bg-sky-300 px-5 py-3 font-semibold text-slate-950 transition hover:bg-sky-200">พูดคุยกับฉัน</a>
+          <a href="#skills" class="rounded-lg border border-slate-700 px-5 py-3 font-semibold text-slate-200 transition hover:border-sky-300 hover:text-sky-300">ดูทักษะ</a>
+        </div>
+      </div>
+      <div class="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl shadow-sky-950/40">
+        <p class="text-sm text-slate-400">ตอนนี้กำลังเรียนรู้</p>
+        <p class="mt-3 text-3xl font-bold">สร้างสิ่งที่ดีขึ้น<br><span class="text-sky-300">ทีละโปรเจกต์</span></p>
+        <div class="mt-8 h-px bg-slate-800"></div>
+        <p class="mt-6 text-sm leading-7 text-slate-400">พร้อมพัฒนาความรู้ด้านเทคโนโลยีและร่วมงานกับทีมที่มีความคิดสร้างสรรค์</p>
+      </div>
+    </section>
+
+    <section id="about" class="border-y border-slate-800 bg-slate-900/70">
+      <div class="mx-auto max-w-6xl px-6 py-16">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-300">About me</p>
+        <h2 class="mt-3 text-3xl font-bold">เรียนรู้ ลงมือทำ และพัฒนาอยู่เสมอ</h2>
+        <p class="mt-5 max-w-2xl leading-8 text-slate-300">ฉันชอบเปลี่ยนแนวคิดให้กลายเป็นผลงานที่เข้าใจง่าย ใช้งานสะดวก และมีรายละเอียดที่ใส่ใจ</p>
+      </div>
+    </section>
+
+    <section id="skills" class="mx-auto max-w-6xl px-6 py-16">
+      <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-300">Skills</p>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+        <div class="rounded-xl border border-slate-800 p-5"><h3 class="font-bold">HTML & CSS</h3><p class="mt-2 text-sm text-slate-400">สร้างหน้าเว็บที่ responsive</p></div>
+        <div class="rounded-xl border border-slate-800 p-5"><h3 class="font-bold">JavaScript</h3><p class="mt-2 text-sm text-slate-400">เพิ่มการโต้ตอบให้เว็บไซต์</p></div>
+        <div class="rounded-xl border border-slate-800 p-5"><h3 class="font-bold">Tailwind CSS</h3><p class="mt-2 text-sm text-slate-400">ออกแบบ UI ได้อย่างรวดเร็ว</p></div>
+        <div class="rounded-xl border border-slate-800 p-5"><h3 class="font-bold">Problem Solving</h3><p class="mt-2 text-sm text-slate-400">วิเคราะห์และแก้ปัญหาเป็นขั้นตอน</p></div>
+      </div>
+    </section>
+
+    <footer id="contact" class="border-t border-slate-800 px-6 py-10 text-center text-sm text-slate-400">
+      <p>สนใจร่วมงานหรือพูดคุยเกี่ยวกับโปรเจกต์</p>
+      <a href="mailto:thanabade@example.com" class="mt-2 inline-block font-semibold text-sky-300 hover:text-sky-200">thanabade@example.com</a>
+    </footer>
+  </main>
+</body>
+</html>
