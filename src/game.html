@@ -138,6 +138,10 @@
           class="rounded-xl bg-ink-900 dark:bg-ink-50 text-ink-50 dark:text-ink-900 font-semibold px-5 py-3 hover:opacity-90 transition-opacity">
           เริ่มเกม
         </button>
+        <button id="pauseBtn" type="button"
+          class="rounded-xl border border-coral-500 text-coral-600 dark:text-coral-400 font-semibold px-5 py-3 hover:bg-coral-400/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed hidden">
+          หยุดชั่วคราว
+        </button>
         <button id="timeBtn" type="button"
           class="rounded-xl border border-mint-500 text-mint-600 dark:text-mint-400 font-semibold px-5 py-3 hover:bg-mint-400/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
           เพิ่มเวลา +10 วิ
@@ -175,6 +179,27 @@
     </button>
   </dialog>
 
+  <dialog id="pauseDialog" class="rounded-2xl border border-ink-200 dark:border-ink-700 bg-ink-50 dark:bg-ink-800 text-ink-900 dark:text-ink-50 max-w-md w-[90%] p-6 backdrop:bg-ink-900/50">
+    <h2 class="text-2xl font-bold mb-6 text-center">⏸ หยุดชั่วคราว</h2>
+    <div class="space-y-3 mb-6">
+      <button id="pauseResumeBtn" type="button" class="w-full rounded-xl bg-mint-500 hover:bg-mint-600 text-ink-900 font-semibold px-5 py-3 transition-colors">
+        ทำต่อ
+      </button>
+      <button id="pauseRestartBtn" type="button" class="w-full rounded-xl border border-amber-500 text-amber-600 dark:text-amber-400 font-semibold px-5 py-3 hover:bg-amber-400/10 transition-colors">
+        เริ่มใหม่
+      </button>
+      <button id="pauseAddTimeBtn" type="button" class="w-full rounded-xl border border-ink-300 dark:border-ink-600 font-semibold px-5 py-3 hover:bg-ink-100 dark:hover:bg-ink-700 transition-colors">
+        เพิ่มเวลา +10 วิ
+      </button>
+      <button id="pauseAddLevelBtn" type="button" class="w-full rounded-xl border border-ink-300 dark:border-ink-600 font-semibold px-5 py-3 hover:bg-ink-100 dark:hover:bg-ink-700 transition-colors">
+        เพิ่ม Level
+      </button>
+    </div>
+    <button id="closePause" type="button" class="w-full rounded-xl bg-ink-200 dark:bg-ink-700 text-ink-900 dark:text-ink-50 font-semibold px-5 py-3 transition-colors">
+      ปิด
+    </button>
+  </dialog>
+
 <script>
 (function () {
   const wordBanks = {
@@ -194,12 +219,19 @@
     input: document.getElementById('typeInput'),
     statusMsg: document.getElementById('statusMsg'),
     startBtn: document.getElementById('startBtn'),
+    pauseBtn: document.getElementById('pauseBtn'),
     levelBtn: document.getElementById('levelBtn'),
     timeBtn: document.getElementById('timeBtn'),
     levelDownBtn: document.getElementById('levelDownBtn'),
     helpBtn: document.getElementById('helpBtn'),
     helpDialog: document.getElementById('helpDialog'),
-    closeHelp: document.getElementById('closeHelp')
+    closeHelp: document.getElementById('closeHelp'),
+    pauseDialog: document.getElementById('pauseDialog'),
+    pauseResumeBtn: document.getElementById('pauseResumeBtn'),
+    pauseRestartBtn: document.getElementById('pauseRestartBtn'),
+    pauseAddTimeBtn: document.getElementById('pauseAddTimeBtn'),
+    pauseAddLevelBtn: document.getElementById('pauseAddLevelBtn'),
+    closePause: document.getElementById('closePause')
   };
 
   const MAX_LEVEL = 10;
@@ -208,6 +240,7 @@
   let level = 1;
   let timeBonus = 0;
   let isPlaying = false;
+  let isPaused = false;
   let timeLeft = 0;
   let target = 0;
   let score = 0;
@@ -246,6 +279,8 @@
     el.timeBtn.disabled = isPlaying || timeBonus >= MAX_TIME_BONUS;
     el.levelBtn.disabled = isPlaying || level >= MAX_LEVEL;
     el.levelDownBtn.disabled = isPlaying || level <= 1;
+    el.pauseBtn.classList.toggle('hidden', !isPlaying);
+    el.pauseBtn.textContent = isPaused ? 'เริ่มใหม่' : 'หยุดชั่วครั้ง';
   }
 
   function flash(kind) {
@@ -257,6 +292,7 @@
   function startGame() {
     const s = settingsForLevel(level);
     isPlaying = true;
+    isPaused = false;
     score = 0;
     mistakes = 0;
     timeLeft = s.time;
@@ -281,8 +317,35 @@
     if (timeLeft <= 0) endGame(false);
   }
 
+  function pauseGame() {
+    if (!isPlaying) return;
+    isPaused = true;
+    clearInterval(timerId);
+    el.input.disabled = true;
+    el.statusMsg.textContent = 'หยุดชั่วคราว';
+    updateChips();
+    el.pauseDialog.showModal();
+  }
+
+  function resumeGameFromPause() {
+    if (!isPlaying || !isPaused) return;
+    isPaused = false;
+    el.input.disabled = false;
+    el.input.focus();
+    el.statusMsg.textContent = 'เล่นต่อ! พิมพ์คำต่อไป';
+    updateChips();
+    clearInterval(timerId);
+    timerId = setInterval(tick, 1000);
+    el.pauseDialog.close();
+  }
+
+  function togglePause() {
+    pauseGame();
+  }
+
   function endGame(won) {
     isPlaying = false;
+    isPaused = false;
     clearInterval(timerId);
     el.input.disabled = true;
 
@@ -367,12 +430,45 @@
 
   el.form.addEventListener('submit', handleSubmit);
   el.startBtn.addEventListener('click', startGame);
+  el.pauseBtn.addEventListener('click', togglePause);
   el.levelBtn.addEventListener('click', levelUp);
   el.levelDownBtn.addEventListener('click', levelDown);
   el.timeBtn.addEventListener('click', increaseTime);
   el.themeBtn.addEventListener('click', toggleTheme);
   el.helpBtn.addEventListener('click', () => el.helpDialog.showModal());
   el.closeHelp.addEventListener('click', () => el.helpDialog.close());
+
+  // Pause menu event listeners
+  el.pauseResumeBtn.addEventListener('click', () => {
+    resumeGameFromPause();
+  });
+  el.pauseRestartBtn.addEventListener('click', () => {
+    el.pauseDialog.close();
+    isPlaying = false;
+    isPaused = false;
+    clearInterval(timerId);
+    startGame();
+  });
+  el.pauseAddTimeBtn.addEventListener('click', () => {
+    timeBonus = Math.min(timeBonus + TIME_INCREMENT, MAX_TIME_BONUS);
+    const s = settingsForLevel(level);
+    timeLeft = s.time;
+    updateChips();
+    el.statusMsg.textContent = `เพิ่มเวลาอีก ${TIME_INCREMENT} วินาทีแล้ว`;
+  });
+  el.pauseAddLevelBtn.addEventListener('click', () => {
+    level = Math.min(level + 1, MAX_LEVEL);
+    const s = settingsForLevel(level);
+    timeLeft = s.time;
+    target = 0;
+    score = 0;
+    updateChips();
+    el.statusMsg.textContent = `เพิ่มระดับเป็น Level ${level} แล้ว`;
+  });
+  el.closePause.addEventListener('click', () => {
+    el.pauseDialog.close();
+    resumeGameFromPause();
+  });
 
   updateChips();
 })();
